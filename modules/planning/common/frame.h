@@ -187,6 +187,8 @@ class Frame {
       const common::VehicleStateProvider *vehicle_state_provider,
       const EgoInfo *ego_info);
 
+  common::Status InitFrameDataForOpenSpace(const common::VehicleStateProvider *vehicle_state_provider);
+
   bool CreateReferenceLineInfo(const std::list<ReferenceLine> &reference_lines,
                                const std::list<hdmap::RouteSegments> &segments);
 

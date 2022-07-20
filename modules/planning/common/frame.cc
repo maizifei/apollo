@@ -385,6 +385,16 @@ Status Frame::InitFrameData(
   return Status::OK();
 }
 
+Status Frame::InitFrameDataForOpenSpace(
+    const common::VehicleStateProvider *vehicle_state_provider) {
+  vehicle_state_ = vehicle_state_provider->vehicle_state();
+  if (!util::IsVehicleStateValid(vehicle_state_)) {
+    AERROR << "Adc init point is not set";
+    return Status(ErrorCode::PLANNING_ERROR, "Adc init point is not set");
+  }
+  return Status::OK();
+}
+
 const Obstacle *Frame::FindCollisionObstacle(const EgoInfo *ego_info) const {
   if (obstacles_.Items().empty()) {
     return nullptr;

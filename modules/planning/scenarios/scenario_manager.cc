@@ -34,6 +34,7 @@
 #include "modules/planning/scenarios/learning_model/learning_model_sample_scenario.h"
 #include "modules/planning/scenarios/park/pull_over/pull_over_scenario.h"
 #include "modules/planning/scenarios/park/valet_parking/valet_parking_scenario.h"
+#include "modules/planning/scenarios/park/auto_parking/auto_parking_scenario.h"
 #include "modules/planning/scenarios/dead_end/deadend_turnaround/deadend_turnaround_scenario.h"
 #include "modules/planning/scenarios/park_and_go/park_and_go_scenario.h"
 #include "modules/planning/scenarios/stop_sign/unprotected/stop_sign_unprotected_scenario.h"
@@ -60,6 +61,31 @@ bool ScenarioManager::Init(const PlanningConfig& planning_config) {
   default_scenario_type_ = ScenarioConfig::LANE_FOLLOW;
   current_scenario_ = CreateScenario(default_scenario_type_);
   return true;
+}
+
+bool ScenarioManager::InitForAutoParking(const PlanningConfig& planning_config) {
+  planning_config_.CopyFrom(planning_config);
+  RegisterAutoParkingScenario();
+  default_scenario_type_ = ScenarioConfig::AUTO_PARKING;
+  current_scenario_ = CreateAutoParkingScenario(default_scenario_type_);
+  return true;
+}
+
+void ScenarioManager::RegisterAutoParkingScenario() {
+  // ACHECK(Scenario::LoadConfig(FLAGS_scenario_auto_parking_config_file,
+  //                             &config_map_[ScenarioConfig::AUTO_PARKING]));
+}
+
+std::unique_ptr<Scenario> ScenarioManager::CreateAutoParkingScenario(
+    ScenarioConfig::ScenarioType scenario_type) {
+  std::unique_ptr<Scenario> ptr;
+  ptr.reset(new scenario::auto_parking::AutoParkingScenario(
+      config_map_[scenario_type], &scenario_context_, injector_));
+
+  if (ptr != nullptr) {
+    ptr->Init();
+  }
+  return ptr;
 }
 
 std::unique_ptr<Scenario> ScenarioManager::CreateScenario(
@@ -737,6 +763,7 @@ ScenarioConfig::ScenarioType ScenarioManager::SelectValetParkingScenario(
       config_map_[ScenarioConfig::VALET_PARKING].valet_parking_config();
 
   // TODO(All) trigger valet parking by route message definition as of now
+  // valet parking现在是由routing request中的ParkingInfo来触发的
   double parking_spot_range_to_start =
       scenario_config.parking_spot_range_to_start();
   if (scenario::valet_parking::ValetParkingScenario::IsTransferable(
@@ -845,6 +872,11 @@ void ScenarioManager::Update(const common::TrajectoryPoint& ego_point,
   Observe(frame);
 
   ScenarioDispatch(frame);
+}
+
+void ScenarioManager::UpdateForAutoParking(const common::TrajectoryPoint& ego_point,
+                                           const Frame& frame) {
+  
 }
 
 

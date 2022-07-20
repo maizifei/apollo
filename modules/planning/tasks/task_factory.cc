@@ -27,6 +27,7 @@
 #include "modules/planning/tasks/deciders/open_space_decider/open_space_fallback_decider.h"
 #include "modules/planning/tasks/deciders/open_space_decider/open_space_pre_stop_decider.h"
 #include "modules/planning/tasks/deciders/open_space_decider/open_space_roi_decider.h"
+#include "modules/planning/tasks/deciders/open_space_decider/open_space_map_decider.h"
 #include "modules/planning/tasks/deciders/path_assessment_decider/path_assessment_decider.h"
 #include "modules/planning/tasks/deciders/path_bounds_decider/path_bounds_decider.h"
 #include "modules/planning/tasks/deciders/path_decider/path_decider.h"
@@ -98,6 +99,12 @@ void TaskFactory::Init(const PlanningConfig& config,
       [](const TaskConfig& config,
          const std::shared_ptr<DependencyInjector>& injector) -> Task* {
         return new OpenSpaceRoiDecider(config, injector);
+      });
+  task_factory_.Register(
+      TaskConfig::OPEN_SPACE_MAP_DECIDER,
+      [](const TaskConfig& config,
+         const std::shared_ptr<DependencyInjector>& injector) -> Task* {
+        return new OpenSpaceMapDecider(config, injector);
       });
   task_factory_.Register(
       TaskConfig::PATH_ASSESSMENT_DECIDER,

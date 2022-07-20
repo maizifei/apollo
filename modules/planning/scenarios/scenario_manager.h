@@ -36,11 +36,15 @@ class ScenarioManager final {
 
   bool Init(const PlanningConfig& planning_config);
 
+  bool InitForAutoParking(const PlanningConfig& planning_config);
+
   Scenario* mutable_scenario() { return current_scenario_.get(); }
 
   DependencyInjector* injector() { return injector_.get(); }
 
   void Update(const common::TrajectoryPoint& ego_point, const Frame& frame);
+
+  void UpdateForAutoParking(const common::TrajectoryPoint& ego_point, const Frame& frame);
 
  private:
   void Observe(const Frame& frame);
@@ -48,7 +52,11 @@ class ScenarioManager final {
   std::unique_ptr<Scenario> CreateScenario(
       ScenarioConfig::ScenarioType scenario_type);
 
+  std::unique_ptr<Scenario> CreateAutoParkingScenario(ScenarioConfig::ScenarioType scenario_type);
+
   void RegisterScenarios();
+
+  void RegisterAutoParkingScenario();
 
   ScenarioConfig::ScenarioType SelectBareIntersectionScenario(
       const Frame& frame, const hdmap::PathOverlap& pnc_junction_overlap);
