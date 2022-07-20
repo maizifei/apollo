@@ -58,7 +58,8 @@ bool PlanningComponent::Init() {
       return false;
     }
   }
-
+  
+  // NaviPlanning或OnLanePlanning的初始化 
   planning_base_->Init(config_);
 
   routing_reader_ = node_->CreateReader<RoutingResponse>(

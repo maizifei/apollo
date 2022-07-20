@@ -18,10 +18,10 @@ message LaneWaypoint {
   optional double heading = 4;
 }
 
-message LaneSegment {
-  optional string id = 1;
-  optional double start_s = 2;
-  optional double end_s = 3;
+message LaneSegment { // 对应一条车道，等同于高精地图中的一条车道。
+  optional string id = 1; // 车道id
+  optional double start_s = 2; // 起始位置与车道起始点的距离。（毕竟规划出的路径并不一定刚好是一个完整的车道，意思就是规划出的路径中的某个车道，并不一定与地图数据中的车道打断长度是一样的。）
+  optional double end_s = 3; // 终止位置与车道起始点的距离。
 }
 
 enum ParkingSpaceType {
@@ -64,7 +64,7 @@ message RoutingRequest {
 }
 
 message Measurement {
-  optional double distance = 1;
+  optional double distance = 1; // 规划路径长度
 }
 
 enum ChangeLaneType {
@@ -73,13 +73,13 @@ enum ChangeLaneType {
   RIGHT = 2;
 };
 
-message Passage {
+message Passage { // 由多个前后相连的segment组成一个passage
   repeated LaneSegment segment = 1;
   optional bool can_exit = 2;
   optional ChangeLaneType change_lane_type = 3 [default = FORWARD];
 }
 
-message RoadSegment {
+message RoadSegment { // 道路段，passages按照道路区分
   optional string id = 1;
   repeated Passage passage = 2;
 }

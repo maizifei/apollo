@@ -229,14 +229,14 @@ Status OpenSpaceTrajectoryProvider::Process() {
         open_space_info.obstacles_vertices_vec();
     const auto& XYbounds = open_space_info.ROI_xy_boundary();
 
-    // Check vehicle state
+    // Check vehicle state 如果已经接近终点，直接生成最后停止路径
     if (IsVehicleNearDestination(vehicle_state, end_pose, rotate_angle,
                                  translate_origin)) {
       GenerateStopTrajectory(trajectory_data);
       return Status(ErrorCode::OK, "Vehicle is near to destination");
     }
 
-    // Generate Trajectory;
+    // Generate Trajectory 调用轨迹优化器进行规划
     double time_latency;
     Status status = open_space_trajectory_optimizer_->Plan(
         stitching_trajectory, end_pose, XYbounds, rotate_angle,

@@ -80,16 +80,20 @@ OnLanePlanning::~OnLanePlanning() {
 std::string OnLanePlanning::Name() const { return "on_lane_planning"; }
 
 Status OnLanePlanning::Init(const PlanningConfig& config) {
+  // 检查config文件
   config_ = config;
   if (!CheckPlanningConfig(config_)) {
     return Status(ErrorCode::PLANNING_ERROR,
                   "planning config error: " + config_.DebugString());
   }
 
+  // TaskFactory任务工厂类在PlanningBase::Init中进行初始化
   PlanningBase::Init(config_);
 
+  // planner_dispatcher_路径规划工厂类注册，包括rtk、publick_road、lattice等
   planner_dispatcher_->Init();
 
+  // 交通规则配置文件 modules/planning/conf/traffic_rule_config.pb.txt
   ACHECK(apollo::cyber::common::GetProtoFromFile(
       FLAGS_traffic_rule_config_filename, &traffic_rule_configs_))
       << "Failed to load traffic rule config file "
@@ -110,6 +114,7 @@ Status OnLanePlanning::Init(const PlanningConfig& config) {
       injector_->vehicle_state(), hdmap_);
   reference_line_provider_->Start();
   // dispatch planner
+  // 创建planner object，默认的是public_road_planner
   planner_ = planner_dispatcher_->DispatchPlanner(config_, injector_);
   if (!planner_) {
     return Status(
@@ -318,7 +323,8 @@ void OnLanePlanning::RunOnce(const LocalView& local_view,
       FLAGS_message_latency_threshold) {
     vehicle_state = AlignTimeStamp(vehicle_state, start_timestamp);
   }
-
+  
+  // 更新RoutingResponse到reference_line_provider_中
   if (util::IsDifferentRouting(last_routing_, *local_view_.routing)) {
     last_routing_ = *local_view_.routing;
     ADEBUG << "last_routing_:" << last_routing_.ShortDebugString();
@@ -328,6 +334,7 @@ void OnLanePlanning::RunOnce(const LocalView& local_view,
     planner_->Init(config_);
   }
 
+  // 更新reference_line_provider_
   failed_to_update_reference_line =
       (!reference_line_provider_->UpdatedReferenceLine());
   // early return when reference line fails to update after rerouting
@@ -347,6 +354,7 @@ void OnLanePlanning::RunOnce(const LocalView& local_view,
   // Update reference line provider and reset pull over if necessary
   reference_line_provider_->UpdateVehicleState(vehicle_state);
 
+  // 估计planning的循环时间
   // planning is triggered by prediction data, but we can still use an estimated
   // cycle time for stitching
   const double planning_cycle_time =
@@ -361,6 +369,8 @@ void OnLanePlanning::RunOnce(const LocalView& local_view,
 
   injector_->ego_info()->Update(stitching_trajectory.back(), vehicle_state);
   const uint32_t frame_num = static_cast<uint32_t>(seq_num_++);
+
+  // 更新Frame帧数据
   status = InitFrame(frame_num, stitching_trajectory.back(), vehicle_state);
 
   if (status.ok()) {
@@ -373,7 +383,8 @@ void OnLanePlanning::RunOnce(const LocalView& local_view,
   }
   ptr_trajectory_pb->mutable_latency_stats()->set_init_frame_time_ms(
       Clock::NowInSeconds() - start_timestamp);
-
+  
+  // 状态异常处理
   if (!status.ok()) {
     AERROR << status.ToString();
     if (FLAGS_publish_estop) {
@@ -403,6 +414,7 @@ void OnLanePlanning::RunOnce(const LocalView& local_view,
     return;
   }
 
+  // 运行traffic_decider
   for (auto& ref_line_info : *frame_->mutable_reference_line_info()) {
     TrafficDecider traffic_decider;
     traffic_decider.Init(traffic_rule_configs_);
@@ -414,6 +426,7 @@ void OnLanePlanning::RunOnce(const LocalView& local_view,
             << " traffic decider failed";
     }
   }
+  // 进行运动规划
   status = Plan(start_timestamp, stitching_trajectory, ptr_trajectory_pb);
   for (const auto& p : ptr_trajectory_pb->trajectory_point()) {
     ADEBUG << p.DebugString();

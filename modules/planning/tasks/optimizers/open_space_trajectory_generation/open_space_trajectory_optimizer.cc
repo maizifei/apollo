@@ -67,6 +67,7 @@ Status OpenSpaceTrajectoryOptimizer::Plan(
   }
 
   // Generate Stop trajectory if init point close to destination
+  // 如果已经接近终点，直接生成停止轨迹
   if (IsInitPointNearDestination(stitching_trajectory.back(), end_pose,
                                  rotate_angle, translate_origin)) {
     ADEBUG << "Planning init point is close to destination, skip new "
@@ -102,6 +103,7 @@ Status OpenSpaceTrajectoryOptimizer::Plan(
   // now)
   HybridAStartResult result;
 
+  // 进行Hybrid A*搜索
   if (warm_start_->Plan(init_x, init_y, init_phi, end_pose[0], end_pose[1],
                         end_pose[2], XYbounds, obstacles_vertices_vec,
                         &result)) {
@@ -123,8 +125,9 @@ Status OpenSpaceTrajectoryOptimizer::Plan(
   Eigen::MatrixXd dual_l_result_ds;
   Eigen::MatrixXd dual_n_result_ds;
 
-  if (FLAGS_enable_parallel_trajectory_smoothing) {
+  if (FLAGS_enable_parallel_trajectory_smoothing) {  // 进行轨迹分段平滑优化
     std::vector<HybridAStartResult> partition_trajectories;
+    // 按照前进后退进行轨迹分段
     if (!warm_start_->TrajectoryPartition(result, &partition_trajectories)) {
       return Status(ErrorCode::PLANNING_ERROR, "Hybrid Astar partition failed");
     }
@@ -274,6 +277,7 @@ Status OpenSpaceTrajectoryOptimizer::Plan(
   }
 
   // rescale the states to the world frame
+  // 将结果转换回到世界坐标系
   size_t state_size = state_result_ds.cols();
   for (size_t i = 0; i < state_size; ++i) {
     PathPointDeNormalizing(rotate_angle, translate_origin,

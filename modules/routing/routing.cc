@@ -35,10 +35,12 @@ Routing::Routing()
     : monitor_logger_buffer_(common::monitor::MonitorMessageItem::ROUTING) {}
 
 apollo::common::Status Routing::Init() {
+  // 读取routing_map
   const auto routing_map_file = apollo::hdmap::RoutingMapFile();
   AINFO << "Use routing topology graph path: " << routing_map_file;
+  // 在navigator中加载拓扑地图
   navigator_ptr_.reset(new Navigator(routing_map_file));
-
+  // 读取原始地图，用来查找routing request请求的点距离最近的lane，读取地图过程中生成地图要素的kd_tree，如Lane_segment_kdtree_，用于地图要素的快速搜索
   hdmap_ = apollo::hdmap::HDMapUtil::BaseMapPtr();
   ACHECK(hdmap_) << "Failed to load map file:" << apollo::hdmap::BaseMapFile();
 
