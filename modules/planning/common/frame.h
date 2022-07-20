@@ -83,8 +83,7 @@ class Frame {
       const EgoInfo *ego_info);
 
   common::Status InitForOpenSpace(
-      const common::VehicleStateProvider *vehicle_state_provider,
-      const EgoInfo *ego_info);
+      const common::VehicleStateProvider *vehicle_state_provider);
 
   uint32_t SequenceNum() const;
 

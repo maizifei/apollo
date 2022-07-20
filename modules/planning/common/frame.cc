@@ -340,9 +340,8 @@ Status Frame::Init(
 }
 
 Status Frame::InitForOpenSpace(
-    const common::VehicleStateProvider *vehicle_state_provider,
-    const EgoInfo *ego_info) {
-  return InitFrameData(vehicle_state_provider, ego_info);
+    const common::VehicleStateProvider *vehicle_state_provider) {
+  return InitFrameDataForOpenSpace(vehicle_state_provider);
 }
 
 Status Frame::InitFrameData(

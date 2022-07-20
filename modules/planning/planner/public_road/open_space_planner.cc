@@ -1,6 +1,6 @@
 
 #include "modules/planning/planner/public_road/open_space_planner.h"
-#include "modules/planning/scenarios/park/valet_parking/auto_parking_scenario.h"
+#include "modules/planning/scenarios/park/auto_parking/auto_parking_scenario.h"
 
 
 namespace apollo {

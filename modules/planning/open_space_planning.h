@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "modules/planning/common/smoothers/smoother.h"
-#include "modules/planning/planner/on_lane_planner_dispatcher.h"
 #include "modules/planning/planner/public_road/open_space_planner.h"
 #include "modules/planning/planning_base.h"
 
@@ -18,7 +17,7 @@ namespace apollo {
 namespace planning {
 
 /**
- * @class OnLanePlanning
+ * @class OpenSpacePlanning
  *
  * @brief Planning module main class for open space scenario. It processes localization map and chassis as input,
  * to generate planning info.
@@ -26,7 +25,7 @@ namespace planning {
 
 class OpenSpacePlanning : public PlanningBase {
     public:
-    explicit OpenSpacePlanning::OpenSpacePlanning(const std::shared_ptr<DependencyInjector>& injector)
+    explicit OpenSpacePlanning(const std::shared_ptr<DependencyInjector>& injector)
     : PlanningBase(injector) {
 
     }
@@ -55,7 +54,7 @@ class OpenSpacePlanning : public PlanningBase {
                         const std::vector<common::TrajectoryPoint>& stitching_trajectory,
                         ADCTrajectory* const trajectory) override;
 
-    bool CheckPlanningConfig(const PlanningConfig config);
+    bool CheckPlanningConfig(const PlanningConfig& config);
     
     private:
     common::Status InitFrame(const uint32_t sequence_num,

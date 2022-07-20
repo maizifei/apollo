@@ -8,7 +8,6 @@
 #include "modules/planning/planner/planner.h"
 #include "modules/planning/proto/planning.pb.h"
 #include "modules/planning/proto/planning_config.pb.h"
-#include "modules/planning/tasks/task.h"
 
 /**
  * @namespace apollo::planning

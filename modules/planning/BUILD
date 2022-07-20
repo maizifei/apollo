@@ -21,6 +21,7 @@ cc_library(
     deps = [
         ":navi_planning",
         ":on_lane_planning",
+        ":open_space_planning",
         "//cyber",
         "//modules/common/adapters:adapter_gflags",
         "//modules/common/util:message_util",
@@ -31,7 +32,6 @@ cc_library(
         "//modules/planning/common:message_process",
         "//modules/planning/proto:planning_cc_proto",
         "//modules/prediction/proto:prediction_obstacle_cc_proto",
-        "//modules/storytelling/proto:story_cc_proto",
     ],
 )
 
@@ -60,13 +60,27 @@ cc_library(
         "//modules/planning/common/smoothers:smoother",
         "//modules/planning/common/util:util_lib",
         "//modules/planning/planner",
-        "//modules/planning/planner:planner_dispatcher",
+        "//modules/planning/planner:planner_dispatcher",       
         "//modules/planning/proto:planning_cc_proto",
         "//modules/planning/proto:planning_config_cc_proto",
         "//modules/planning/proto:traffic_rule_config_cc_proto",
         "//modules/planning/tasks:task_factory",
         "//modules/planning/traffic_rules:traffic_decider",
         "//modules/prediction/proto:prediction_obstacle_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "open_space_planning",
+    srcs = ["open_space_planning.cc"],
+    hdrs = ["open_space_planning.h"],
+    copts = [
+        "-fopenmp",
+        "-DMODULE_NAME=\\\"planning\\\"",
+    ],
+    deps = [
+        ":planning_base",
+        "//modules/planning/planner/public_road:open_space_planner",       
     ],
 )
 

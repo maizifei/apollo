@@ -54,7 +54,7 @@ OpenSpacePlanning::~OpenSpacePlanning() {
     injector_->ego_info()->Clear();
 }
 
-std::string OpenSpacePlanning::Name() const { return "open_space_planning" }
+std::string OpenSpacePlanning::Name() const { return "open_space_planning"; }
 
 Status OpenSpacePlanning::Init(const PlanningConfig& config) {
     config_ = config;
@@ -87,7 +87,7 @@ Status OpenSpacePlanning::Init(const PlanningConfig& config) {
 }
 
 Status OpenSpacePlanning::InitFrame(const uint32_t sequence_num,
-                                    TrajectoryPoint& planning_start_point,
+                                    const TrajectoryPoint& planning_start_point,
                                     const VehicleState& vehicle_state) {
     frame_.reset(new Frame(sequence_num, local_view_, planning_start_point,
                            vehicle_state));
@@ -95,7 +95,7 @@ Status OpenSpacePlanning::InitFrame(const uint32_t sequence_num,
         return Status(ErrorCode::PLANNING_ERROR, "Fail to init frame: nullptr.");
     }
 
-    auto status = frame_->InitFrameDataForOpenSpace(injector_->vehicle_state());
+    auto status = frame_->InitForOpenSpace(injector_->vehicle_state());
 
     if (!status.ok()) {
         AERROR << "failed to init frame:" << status.ToString();
@@ -127,18 +127,18 @@ void OpenSpacePlanning::RunOnce(const LocalView& local_view,
         << "start_timestamp is behind vehicle_state_timestamp by"
         << start_timestamp - vehicle_state_timestamp << " secs";
 
-    if (!status.ok() || !util::IsVehicleStateValid(vehicle_state)) {
-        const std::string msg = "Update VehicleStateProvider failed "
-                                "or the vehicle state is out dated.";
-        AERROR << msg;
-        ptr_trajectory_pb->mutable_decision()->mutable_main_decision()
-                         ->mutable_not_ready()->set_reason(msg);
-        status.Save(ptr_trajectory_pb->mutable_header()->mutable_status());
-        ptr_trajectory_pb->set_gear(canbus::Chassis::GEAR_DRIVE);
-        FillPlanningPb(start_timestamp, ptr_trajectory_pb);
-        GenerateStopTrajectory(ptr_trajectory_pb);
-        return;
-    }
+    // if (!status.ok() || !util::IsVehicleStateValid(vehicle_state)) {
+    //     const std::string msg = "Update VehicleStateProvider failed "
+    //                             "or the vehicle state is out dated.";
+    //     AERROR << msg;
+    //     ptr_trajectory_pb->mutable_decision()->mutable_main_decision()
+    //                      ->mutable_not_ready()->set_reason(msg);
+    //     status.Save(ptr_trajectory_pb->mutable_header()->mutable_status());
+    //     ptr_trajectory_pb->set_gear(canbus::Chassis::GEAR_DRIVE);
+    //     FillPlanningPb(start_timestamp, ptr_trajectory_pb);
+    //     GenerateStopTrajectory(ptr_trajectory_pb);
+    //     return;
+    // }
 
     if (start_timestamp - vehicle_state_timestamp < FLAGS_message_latency_threshold) {
         vehicle_state = AlignTimeStamp(vehicle_state, start_timestamp);
@@ -171,7 +171,7 @@ void OpenSpacePlanning::RunOnce(const LocalView& local_view,
         AERROR << status.ToString();
         if (FLAGS_publish_estop) {
             ADCTrajectory estop_trajectory;
-            ESTOP* estop = estop_trajectory.mutable_estop();
+            EStop* estop = estop_trajectory.mutable_estop();
             estop->set_is_estop(true);
             estop->set_reason(status.error_message());
             status.Save(estop_trajectory.mutable_header()->mutable_status());
@@ -180,7 +180,7 @@ void OpenSpacePlanning::RunOnce(const LocalView& local_view,
             ptr_trajectory_pb->mutable_decision()->mutable_main_decision()
                 ->mutable_not_ready()->set_reason(status.ToString());
             status.Save(ptr_trajectory_pb->mutable_header()->mutable_status());
-            GenerateStopTrajectory(ptr_trajectory_pb);
+            // GenerateStopTrajectory(ptr_trajectory_pb);
         }
         ptr_trajectory_pb->set_gear(canbus::Chassis::GEAR_DRIVE);
         FillPlanningPb(start_timestamp, ptr_trajectory_pb);
@@ -201,14 +201,14 @@ void OpenSpacePlanning::RunOnce(const LocalView& local_view,
     ADEBUG << "total planning time spend: " << time_diff_ms << " ms.";
 
     ptr_trajectory_pb->mutable_latency_stats()->set_total_time_ms(time_diff_ms);
-    ADEBUG << "Planning latency: " << ptr_trajectory_pb->latency_status().DebugString();
+    ADEBUG << "Planning latency: " << ptr_trajectory_pb->latency_stats().DebugString();
 
     if (!status.ok()) {
         status.Save(ptr_trajectory_pb->mutable_header()->mutable_status());
         AERROR << "Planning failed:" << status.ToString();
         if (FLAGS_publish_estop) {
             AERROR << "Planning failed and set estop";
-            ESTOP* estop = ptr_trajectory_pb->mutable_estop();
+            EStop* estop = ptr_trajectory_pb->mutable_estop();
             estop->set_is_estop(true);
             estop->set_reason(status.error_message());
         }
@@ -258,7 +258,7 @@ Status OpenSpacePlanning::Plan(const double current_time_stamp,
         frame_->mutable_open_space_info()->sync_debug_instance();
     }
 
-    auto status = open_space_planner_->Plan(stitching_trajectory.back(), frame_.get()
+    auto status = open_space_planner_->Plan(stitching_trajectory.back(), frame_.get(),
                                             ptr_trajectory_pb);
 
     ptr_debug->mutable_planning_data()->set_front_clear_distance(
@@ -288,11 +288,6 @@ Status OpenSpacePlanning::Plan(const double current_time_stamp,
         ptr_trajectory_pb->mutable_decision()->mutable_main_decision()
             ->mutable_parking()->set_status(MainParking::IN_PARKING);
 
-        if (FLAGS_enable_record_debug) {
-            frame_->mutable_open_space_info()->RecordDebug(ptr_debug);
-            ADEBUG << "Open space debug information added!";
-            ExportOpenSpaceChart(ptr_trajectory_pb->debug(), *ptr_trajectory_pb, ptr_debug);
-        }
     }
 
     return status;

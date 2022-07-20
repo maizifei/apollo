@@ -35,6 +35,26 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "open_space_planner",
+    srcs = ["open_space_planner.cc"],
+    hdrs = ["open_space_planner.h"],
+    copts = ["-DMODULE_NAME=\\\"planning\\\""],
+    deps = [
+        "//modules/common/status",
+        "//modules/common/util",
+        "//modules/common/util:factory",
+        "//modules/common/vehicle_state:vehicle_state_provider",
+        "//modules/planning/common:planning_common",
+        "//modules/planning/common:planning_gflags",
+        "//modules/planning/constraint_checker",
+        "//modules/planning/planner",
+        "//modules/planning/proto:planning_cc_proto",
+        "@com_github_gflags_gflags//:gflags",
+        "@eigen",
+    ],
+)
+
 cc_test(
     name = "public_road_planner_test",
     size = "small",
