@@ -18,6 +18,18 @@ cc_library(
 )
 
 cc_library(
+    name = "open_space_map_decider",
+    srcs = ["open_space_map_decider.cc"],
+    hdrs = ["open_space_map_decider.h"],
+    copts = PLANNING_COPTS,
+    deps = [
+        "//modules/planning/common:planning_context",
+        "//modules/planning/common:planning_gflags",
+        "//modules/planning/tasks/deciders:decider_base",
+    ],
+)
+
+cc_library(
     name = "open_space_pre_stop_decider",
     srcs = ["open_space_pre_stop_decider.cc"],
     hdrs = ["open_space_pre_stop_decider.h"],

@@ -42,6 +42,8 @@ message TaskConfig {
     // other tasks
     LEARNING_MODEL_INFERENCE_TASK = 27;
     LEARNING_MODEL_INFERENCE_TRAJECTORY_TASK = 28;
+
+    OPEN_SPACE_MAP_DECIDER = 29;
   };
 
   optional TaskType task_type = 1;
@@ -180,6 +182,8 @@ message ScenarioValetParkingConfig {
   optional double max_valid_stop_distance = 2 [default = 1.0];  // meter
 }
 
+message ScenarioAutoParkingConfig {}
+
 message ScenarioDeadEndTurnAroundConfig {
   optional double dead_end_start_range = 1 [default = 20.0];
   optional double max_valid_stop_distance = 2 [default = 1.0];  // meter
@@ -222,6 +226,8 @@ message ScenarioConfig {
     LEARNING_MODEL_SAMPLE = 15;
     // turn around
     DEADEND_TURNAROUND = 16;
+
+    AUTO_PARKING = 17;
   }
 
   // StageType is a superset of stages from all scenarios.
@@ -272,6 +278,9 @@ message ScenarioConfig {
     // valet parking scenario
     VALET_PARKING_APPROACHING_PARKING_SPOT = 700;
     VALET_PARKING_PARKING = 701;
+
+    // auto parking scenario
+    AUTO_PARKING_PARKING = 1200;
     
     // turning around scenario
     DEADEND_TURNAROUND_APPROACHING_TURNING_POINT = 1100;
@@ -319,8 +328,9 @@ message ScenarioConfig {
     ScenarioTrafficLightUnprotectedRightTurnConfig
         traffic_light_unprotected_right_turn_config = 13;
     ScenarioValetParkingConfig valet_parking_config = 14;
-    ScenarioYieldSignConfig yield_sign_config = 15;
+    ScenarioYieldSignConfig yield_sign_config = 15;    
     ScenarioDeadEndTurnAroundConfig deadend_turnaround_config = 18;
+    ScenarioAutoParkingConfig auto_parking_config = 19;
   }
   // a list of stages that are used at runtime.  The first one is default stage.
   repeated StageType stage_type = 16;
