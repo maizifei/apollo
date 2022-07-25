@@ -83,6 +83,10 @@ DEFINE_string(scenario_valet_parking_config_file,
               "/apollo/modules/planning/conf/"
               "scenario/valet_parking_config.pb.txt",
               "valet_parking scenario config file");
+DEFINE_string(scenario_auto_parking_config_file,
+              "/apollo/modules/planning/conf/"
+              "scenario/auto_parking_config.pb.txt",
+              "auto_parking scenario config file");
 DEFINE_string(scenario_deadend_turnaround_config_file,
               "/apollo/modules/planning/conf/"
               "scenario/deadend_turnaround_config.pb.txt",

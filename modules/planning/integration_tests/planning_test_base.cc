@@ -37,7 +37,7 @@ using apollo::prediction::PredictionObstacles;
 using apollo::routing::RoutingResponse;
 
 DEFINE_string(test_data_dir, "", "the test data folder");
-DEFINE_bool(test_update_golden_log, false,
+DEFINE_bool(test_update_golden_log, true,
             "true to update decision golden log file.");
 DEFINE_string(test_routing_response_file, "", "The routing file used in test");
 DEFINE_string(test_localization_file, "", "The localization test file");
@@ -48,6 +48,9 @@ DEFINE_string(test_traffic_light_file, "", "The traffic light test file");
 DEFINE_string(test_relative_map_file, "", "The relative map test file");
 DEFINE_string(test_previous_planning_file, "",
               "The previous planning test file");
+
+DECLARE_bool(enable_auto_parking_test);
+DEFINE_bool(enable_auto_parking_test, true, "True to enable auto parking test");
 
 void PlanningTestBase::SetUpTestCase() {
   FLAGS_use_multi_thread_to_add_obstacles = false;
@@ -99,49 +102,52 @@ bool PlanningTestBase::FeedTestData() {
   Clock::SetMode(apollo::cyber::proto::MODE_MOCK);
   Clock::SetNowInSeconds(localization.header().timestamp_sec());
 
-  // prediction
-  if (FLAGS_test_prediction_file.empty()) {
-    AERROR << "Requires FLAGS_test_prediction_file to be set";
-    return false;
-  }
-  PredictionObstacles prediction;
-  if (!apollo::cyber::common::GetProtoFromFile(
-          FLAGS_test_data_dir + "/" + FLAGS_test_prediction_file,
-          &prediction)) {
-    AERROR << "failed to load file: " << FLAGS_test_prediction_file;
-    return false;
-  }
-  // routing_response
-  if (FLAGS_test_routing_response_file.empty()) {
-    AERROR << "Requires FLAGS_test_routing_response_file";
-    return false;
-  }
-  RoutingResponse routing_response;
-  if (!apollo::cyber::common::GetProtoFromFile(
-          FLAGS_test_data_dir + "/" + FLAGS_test_routing_response_file,
-          &routing_response)) {
-    AERROR << "failed to load file: " << FLAGS_test_routing_response_file;
-    return false;
-  }
-  // traffic_light_detection
-  // optional
-  TrafficLightDetection traffic_light_detection;
-  if (!apollo::cyber::common::GetProtoFromFile(
-          FLAGS_test_data_dir + "/" + FLAGS_test_traffic_light_file,
-          &traffic_light_detection)) {
-    AERROR << "failed to load file: " << FLAGS_test_traffic_light_file;
-    return false;
+  if (!FLAGS_enable_auto_parking_test) {
+    // prediction
+    if (FLAGS_test_prediction_file.empty()) {
+      AERROR << "Requires FLAGS_test_prediction_file to be set";
+      return false;
+    }
+    PredictionObstacles prediction;
+    if (!apollo::cyber::common::GetProtoFromFile(
+            FLAGS_test_data_dir + "/" + FLAGS_test_prediction_file,
+            &prediction)) {
+      AERROR << "failed to load file: " << FLAGS_test_prediction_file;
+      return false;
+    }
+    // routing_response
+    if (FLAGS_test_routing_response_file.empty()) {
+      AERROR << "Requires FLAGS_test_routing_response_file";
+      return false;
+    }
+    RoutingResponse routing_response;
+    if (!apollo::cyber::common::GetProtoFromFile(
+            FLAGS_test_data_dir + "/" + FLAGS_test_routing_response_file,
+            &routing_response)) {
+      AERROR << "failed to load file: " << FLAGS_test_routing_response_file;
+      return false;
+    }
+    // traffic_light_detection
+    // optional
+    TrafficLightDetection traffic_light_detection;
+    if (!apollo::cyber::common::GetProtoFromFile(
+            FLAGS_test_data_dir + "/" + FLAGS_test_traffic_light_file,
+            &traffic_light_detection)) {
+      AERROR << "failed to load file: " << FLAGS_test_traffic_light_file;
+      return false;
+    }
+
+    local_view_.prediction_obstacles =
+        std::make_shared<PredictionObstacles>(prediction);
+    local_view_.routing =
+        std::make_shared<routing::RoutingResponse>(routing_response);
+    local_view_.traffic_light =
+        std::make_shared<TrafficLightDetection>(traffic_light_detection);
   }
 
-  local_view_.prediction_obstacles =
-      std::make_shared<PredictionObstacles>(prediction);
   local_view_.chassis = std::make_shared<Chassis>(chassis);
   local_view_.localization_estimate =
       std::make_shared<LocalizationEstimate>(localization);
-  local_view_.routing =
-      std::make_shared<routing::RoutingResponse>(routing_response);
-  local_view_.traffic_light =
-      std::make_shared<TrafficLightDetection>(traffic_light_detection);
 
   AINFO << "Successfully feed proto files.";
   return true;
@@ -150,11 +156,15 @@ bool PlanningTestBase::FeedTestData() {
 void PlanningTestBase::SetUp() {
   injector_ = std::make_shared<DependencyInjector>();
 
-  if (FLAGS_use_navigation_mode) {
-    // TODO(all)
-    // planning_ = std::unique_ptr<PlanningBase>(new NaviPlanning());
+  if (FLAGS_enable_auto_parking_test) {
+    planning_ = std::unique_ptr<PlanningBase>(new OpenSpacePlanning(injector_));    
   } else {
-    planning_ = std::unique_ptr<PlanningBase>(new OnLanePlanning(injector_));
+    if (FLAGS_use_navigation_mode) {
+      // TODO(all)
+      // planning_ = std::unique_ptr<PlanningBase>(new NaviPlanning());
+    } else {
+      planning_ = std::unique_ptr<PlanningBase>(new OnLanePlanning(injector_));
+    }
   }
 
   ACHECK(FeedTestData()) << "Failed to feed test data";
@@ -166,18 +176,20 @@ void PlanningTestBase::SetUp() {
 
   ACHECK(planning_->Init(config_).ok()) << "Failed to init planning module";
 
-  if (!FLAGS_test_previous_planning_file.empty()) {
-    const auto prev_planning_file =
-        FLAGS_test_data_dir + "/" + FLAGS_test_previous_planning_file;
-    ADCTrajectory prev_planning;
-    ACHECK(cyber::common::GetProtoFromFile(prev_planning_file, &prev_planning));
-    planning_->last_publishable_trajectory_.reset(
-        new PublishableTrajectory(prev_planning));
-  }
-  for (auto& config : *(planning_->traffic_rule_configs_.mutable_config())) {
-    auto iter = rule_enabled_.find(config.rule_id());
-    if (iter != rule_enabled_.end()) {
-      config.set_enabled(iter->second);
+  if (!FLAGS_enable_auto_parking_test) {
+    if (!FLAGS_test_previous_planning_file.empty()) {
+      const auto prev_planning_file =
+          FLAGS_test_data_dir + "/" + FLAGS_test_previous_planning_file;
+      ADCTrajectory prev_planning;
+      ACHECK(cyber::common::GetProtoFromFile(prev_planning_file, &prev_planning));
+      planning_->last_publishable_trajectory_.reset(
+          new PublishableTrajectory(prev_planning));
+    }
+    for (auto& config : *(planning_->traffic_rule_configs_.mutable_config())) {
+      auto iter = rule_enabled_.find(config.rule_id());
+      if (iter != rule_enabled_.end()) {
+        config.set_enabled(iter->second);
+      }
     }
   }
 }

@@ -107,10 +107,15 @@ Status OpenSpaceTrajectoryProvider::Process() {
   // Get stitching trajectory from last frame
   const common::VehicleState vehicle_state = frame_->vehicle_state();
   auto* previous_frame = injector_->frame_history()->Latest();
+  bool prev_fallback_flag = false;
+  if (previous_frame) {
+    prev_fallback_flag = previous_frame->open_space_info().fallback_flag();
+  }
+
   // Use complete raw trajectory from last frame for stitching purpose
   std::vector<TrajectoryPoint> stitching_trajectory;
-  if (!IsVehicleStopDueToFallBack(
-          previous_frame->open_space_info().fallback_flag(), vehicle_state)) {
+  if (previous_frame && !IsVehicleStopDueToFallBack(
+          prev_fallback_flag, vehicle_state)) {
     const auto& previous_planning =
         previous_frame->open_space_info().stitched_trajectory_result();
     const auto& previous_planning_header =
@@ -127,7 +132,7 @@ Status OpenSpaceTrajectoryProvider::Process() {
         FLAGS_open_space_trajectory_stitching_preserved_length, false,
         &last_frame_complete_trajectory, &replan_reason);
   } else {
-    ADEBUG << "Replan due to fallback stop";
+    ADEBUG << "Replan due to fallback stop or first time init";
     const double planning_cycle_time =
         1.0 / static_cast<double>(FLAGS_planning_loop_rate);
     stitching_trajectory = TrajectoryStitcher::ComputeReinitStitchingTrajectory(

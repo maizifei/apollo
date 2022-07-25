@@ -110,6 +110,7 @@ void OpenSpacePlanning::RunOnce(const LocalView& local_view,
     const double start_system_timestamp = std::chrono::duration<double>(
                 std::chrono::system_clock::now().time_since_epoch()).count();
 
+    local_view_ = local_view;
     // localization
     ADEBUG << "Get localization:"
            << local_view_.localization_estimate->DebugString();

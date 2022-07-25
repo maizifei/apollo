@@ -431,13 +431,13 @@ void Frame::RecordInputDebug(planning_internal::Debug *debug) {
   auto debug_chassis = planning_debug_data->mutable_chassis();
   debug_chassis->CopyFrom(*local_view_.chassis);
 
-  if (!FLAGS_use_navigation_mode) {
-    auto debug_routing = planning_debug_data->mutable_routing();
-    debug_routing->CopyFrom(*local_view_.routing);
-  }
+  // if (!FLAGS_use_navigation_mode) {
+  //   auto debug_routing = planning_debug_data->mutable_routing();
+  //   debug_routing->CopyFrom(*local_view_.routing);
+  // }
 
-  planning_debug_data->mutable_prediction_header()->CopyFrom(
-      local_view_.prediction_obstacles->header());
+  // planning_debug_data->mutable_prediction_header()->CopyFrom(
+  //     local_view_.prediction_obstacles->header());
   /*
   auto relative_map = AdapterManager::GetRelativeMap();
   if (!relative_map->Empty()) {

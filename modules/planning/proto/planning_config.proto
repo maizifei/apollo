@@ -182,7 +182,9 @@ message ScenarioValetParkingConfig {
   optional double max_valid_stop_distance = 2 [default = 1.0];  // meter
 }
 
-message ScenarioAutoParkingConfig {}
+message ScenarioAutoParkingConfig {
+  optional double parking_spot_range_to_start = 1 [default = 20.0];
+}
 
 message ScenarioDeadEndTurnAroundConfig {
   optional double dead_end_start_range = 1 [default = 20.0];

@@ -25,6 +25,7 @@
 // TODO(all) #include "modules/planning/navi_planning.h"
 #include "modules/planning/on_lane_planning.h"
 #include "modules/planning/planning_base.h"
+#include "modules/planning/open_space_planning.h"
 
 namespace apollo {
 namespace planning {

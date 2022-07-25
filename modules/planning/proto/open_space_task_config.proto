@@ -84,6 +84,9 @@ message OpenSpaceRoiDeciderConfig {
   optional double extend_left_x_buffer = 17 [default = 0.0];
 }
 
+message OpenSpaceMapDeciderConfig {
+}
+
 //////////////////////////////////
 // OpenSpaceTrajectoryPartitionConfig
 

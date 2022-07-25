@@ -72,8 +72,8 @@ bool ScenarioManager::InitForAutoParking(const PlanningConfig& planning_config) 
 }
 
 void ScenarioManager::RegisterAutoParkingScenario() {
-  // ACHECK(Scenario::LoadConfig(FLAGS_scenario_auto_parking_config_file,
-  //                             &config_map_[ScenarioConfig::AUTO_PARKING]));
+  ACHECK(Scenario::LoadConfig(FLAGS_scenario_auto_parking_config_file,
+                              &config_map_[ScenarioConfig::AUTO_PARKING]));
 }
 
 std::unique_ptr<Scenario> ScenarioManager::CreateAutoParkingScenario(
