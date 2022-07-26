@@ -455,7 +455,7 @@ DEFINE_bool(enable_perception_obstacles, true,
             "enable the open space planner to take perception obstacles into "
             "consideration");
 
-DEFINE_bool(enable_open_space_planner_thread, true,
+DEFINE_bool(enable_open_space_planner_thread, false,
             "Enable thread in open space planner for trajectory publish.");
 
 DEFINE_bool(use_dual_variable_warm_start, true,
